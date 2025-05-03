@@ -217,18 +217,20 @@ class Excel_WorkBook:
             print(f"Error formatting cells: {str(e)}")
             return False
 
-    def insert_image(self, str_name_sheet, cell_ref, image_path):
-        """Insert an image at specified cell"""
+    def insert_image(self, str_name_sheet, cell_ref, image_path, scale_width=1.0, scale_height=1.0):
         try:
             if not self.__check_name_sheet__(str_name_sheet):
-                print(f"Sheet '{str_name_sheet}' does not exist.")
+                print(f"Sheet '{str_name_sheet}' not exists.")
                 return False
             if not os.path.exists(image_path):
-                print(f"Image file '{image_path}' does not exist.")
+                print(f"File ảnh '{image_path}' not exists.")
                 return False
                 
             sheet = self.workbook[str_name_sheet]
             img = Image(image_path)
+            # Điều chỉnh kích thước ảnh
+            img.width = img.width * scale_width
+            img.height = img.height * scale_height
             sheet.add_image(img, cell_ref)
             return True
         except Exception as e:
