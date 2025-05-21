@@ -320,49 +320,61 @@ class Excel_WorkBook:
             print(f"Error closing workbook: {str(e)}")
             return False
 
-if __name__ == "__main__":
-    excel_file_path = "example.xlsx"
-    excel_sheet_name = "Sheet"
+    def check_last_data_cell(self, str_name_sheet):
+            """
+            Trong thư viện openpyxl, xác định ô cuối cùng có dữ liệu bằng cách sử dụng thuộc tính max_row và max_column của sheet, 
+            kết hợp với việc kiểm tra thực tế các ô từ cuối sheet trở lên. Tuy nhiên, max_row và max_column chỉ cho biết phạm vi lớn nhất mà sheet đã sử dụng, 
+            chứ không đảm bảo rằng mọi ô trong phạm vi đó đều có dữ liệu. 
+            Vì vậy, chúng ta cần một phương pháp quét ngược từ cuối sheet để tìm chính xác ô cuối cùng có dữ liệu, và sau đó kiểm tra các ô tiếp theo một cách hiệu quả hơn.
+            """
+            try:
+                if not self.__check_name_sheet__(str_name_sheet):
+                    print(f"Sheet '{str_name_sheet}' does not exist.")
+                    return None
+                
+                sheet = self.workbook[str_name_sheet]
+                max_row = sheet.max_row or 1
+                max_col = sheet.max_column or 1
 
-    # Example styles
-    pattern_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-    font = Font(name='Tahoma', size=11, bold=True, italic=False, color='FF000000')
-    border = Border(
-        left=Side(border_style="double", color='FF000000'),
-        right=Side(border_style="double", color='FF000000'),
-        top=Side(border_style="double", color='FF000000'),
-        bottom=Side(border_style="double", color='FF000000')
-    )
-    alignment = Alignment(horizontal='center', vertical='center')
-    
-    # Example usage
-    excel = Excel_WorkBook(excel_file_path, excel_sheet_name)
-    
-    # Write sample data
-    excel.write_column(excel_sheet_name, 'A', ['Header1', 'Data1', 'Data2'])
-    excel.write_row(excel_sheet_name, 1, ['Header1', 'Header2', 'Header3'])
-    excel.write_cell(excel_sheet_name, 'B7', 25000)
-    excel.write_cell(excel_sheet_name, (7, 3), 23000)
-    
-    # Apply formatting
-    excel.format_cells(
-        excel_sheet_name,
-        'B7:C7',
-        pattern_fill=pattern_fill,
-        font=font,
-        border=border,
-        alignment=alignment,
-        number_format='#,##0.00'
-    )
-    
-    # Additional features
-    excel.set_column_width(excel_sheet_name, 'A', 20)
-    excel.set_row_height(excel_sheet_name, 1, 30)
-    excel.add_sort_filter(excel_sheet_name, 'A1:C7')
-    excel.merge_cells(excel_sheet_name, 'B2:D4')
-    excel.set_formula(excel_sheet_name, 'D7', '=SUM(B7:C7)')
-    excel.freeze_panes(excel_sheet_name, 'B2')
-    
-    # Save and close
-    excel.save()
-    excel.close()
+                # Start from the bottom-right cell and scan backwards to find the last cell with data
+                last_row = 0
+                last_col = 0
+                for row in range(max_row, 0, -1):
+                    for col in range(max_col, 0, -1):
+                        if sheet.cell(row=row, column=col).value is not None:
+                            last_row = row
+                            last_col = col
+                            break
+                    if last_row > 0:
+                        break
+
+                if last_row == 0 or last_col == 0:
+                    print("No data found in the sheet.")
+                    return (0, 0, True)
+
+                # Check a reasonable range after the last cell (e.g., next 1000 rows or columns)
+                check_range = 1000
+                is_clean = True
+                # Check rows after last_row
+                for row in range(last_row + 1, min(last_row + check_range + 1, max_row + 1)):
+                    for col in range(1, max_col + 1):
+                        if sheet.cell(row=row, column=col).value is not None:
+                            is_clean = False
+                            print(f"Unexpected data found at row {row}, column {col}")
+                            break
+                    if not is_clean:
+                        break
+                # Check columns after last_col
+                for col in range(last_col + 1, min(last_col + check_range + 1, max_col + 1)):
+                    for row in range(1, last_row + 1):
+                        if sheet.cell(row=row, column=col).value is not None:
+                            is_clean = False
+                            print(f"Unexpected data found at row {row}, column {col}")
+                            break
+                    if not is_clean:
+                        break
+
+                return (last_row, last_col, is_clean)
+            except Exception as e:
+                print(f"Error checking last data cell: {str(e)}")
+                return None
