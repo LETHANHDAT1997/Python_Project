@@ -121,6 +121,9 @@ style_manager.create_conditional_formatting(
 for col in range(1, 24):  # Columns A to W
     excel.set_column_width("ASPHALT", col, 15)
 
+# Freeze the header row
+excel.freeze_panes("ASPHALT", "G2")  # Freeze the header row
+
 # Save the workbook
 excel.save()
 excel.close()
