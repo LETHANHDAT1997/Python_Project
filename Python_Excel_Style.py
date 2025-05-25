@@ -203,6 +203,66 @@ class Excel_Style:
         except Exception as e:
             print(f"Error creating color: {str(e)}")
             return None
+        
+    def get_cell_style(self, workbook, sheet_name, cell_ref):
+        """
+        Retrieve style information (font, fill, border, alignment, number_format, protection) for a specific cell
+        """
+        try:
+            if sheet_name not in workbook.sheetnames:
+                print(f"Sheet '{sheet_name}' does not exist.")
+                return None
+            
+            sheet = workbook[sheet_name]
+            cell = sheet[cell_ref] if isinstance(cell_ref, str) else sheet.cell(row=cell_ref[0], column=cell_ref[1])
+            
+            style_info = {
+                'font': {
+                    'name': cell.font.name if cell.font else None,
+                    'size': cell.font.size if cell.font else None,
+                    'bold': cell.font.bold if cell.font else None,
+                    'italic': cell.font.italic if cell.font else None,
+                    'underline': cell.font.underline if cell.font else None,
+                    'color': cell.font.color.rgb if cell.font and cell.font.color else None,
+                    'strikethrough': cell.font.strikethrough if cell.font else None,
+                    'vertAlign': cell.font.vertAlign if cell.font else None
+                },
+                'fill': {
+                    'fill_type': cell.fill.fill_type if cell.fill else None,
+                    'start_color': cell.fill.start_color.rgb if cell.fill and cell.fill.start_color else None,
+                    'end_color': cell.fill.end_color.rgb if cell.fill and cell.fill.end_color else None
+                },
+                'border': {
+                    'left_style': cell.border.left.border_style if cell.border and cell.border.left else None,
+                    'left_color': cell.border.left.color.rgb if cell.border and cell.border.left and cell.border.left.color else None,
+                    'right_style': cell.border.right.border_style if cell.border and cell.border.right else None,
+                    'right_color': cell.border.right.color.rgb if cell.border and cell.border.right and cell.border.right.color else None,
+                    'top_style': cell.border.top.border_style if cell.border and cell.border.top else None,
+                    'top_color': cell.border.top.color.rgb if cell.border and cell.border.top and cell.border.top.color else None,
+                    'bottom_style': cell.border.bottom.border_style if cell.border and cell.border.bottom else None,
+                    'bottom_color': cell.border.bottom.color.rgb if cell.border and cell.border.bottom and cell.border.bottom.color else None,
+                    'diagonal': cell.border.diagonalUp or cell.border.diagonalDown if cell.border else None,
+                    'diagonal_style': cell.border.diagonal.border_style if cell.border and cell.border.diagonal else None,
+                    'diagonal_color': cell.border.diagonal.color.rgb if cell.border and cell.border.diagonal and cell.border.diagonal.color else None
+                },
+                'alignment': {
+                    'horizontal': cell.alignment.horizontal if cell.alignment else None,
+                    'vertical': cell.alignment.vertical if cell.alignment else None,
+                    'text_rotation': cell.alignment.text_rotation if cell.alignment else None,
+                    'wrap_text': cell.alignment.wrap_text if cell.alignment else None,
+                    'shrink_to_fit': cell.alignment.shrink_to_fit if cell.alignment else None,
+                    'indent': cell.alignment.indent if cell.alignment else None
+                },
+                'number_format': cell.number_format if cell.number_format else None,
+                'protection': {
+                    'locked': cell.protection.locked if cell.protection else None,
+                    'hidden': cell.protection.hidden if cell.protection else None
+                }
+            }
+            return style_info
+        except Exception as e:
+            print(f"Error retrieving cell style: {str(e)}")
+            return None
 
 if __name__ == "__main__":
     # Example usage
@@ -248,6 +308,11 @@ if __name__ == "__main__":
         font=Font(color='FF0000'),
         fill=PatternFill(start_color='FFFF00', fill_type='solid')
     )
+
+    # Retrieve and print cell style for A1
+    style_info = style_manager.get_cell_style(workbook, 'TestSheet', 'A1')
+    if style_info:
+        print(f"Cell A1 Style:\n{style_info['font']}\n{style_info['fill']}\n{style_info['border']}\n{style_info['alignment']}\n{style_info['number_format']}\n{style_info['protection']}")
 
     # Save workbook
     workbook.save('style_test.xlsx')
